@@ -1,0 +1,8 @@
+# Generated files
+*.exe
+*.exe.manifest
+*.o
+*.hi
+
+# Editor configuration
+.vscode/
