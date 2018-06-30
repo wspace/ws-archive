@@ -1,0 +1,208 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+                      "http://www.w3.org/TR/html4/strict.dtd">
+
+<html>
+<head>
+<title>Whitespace</title>
+<link rel="stylesheet" type="text/css" href="../wconrad.css">
+</head>
+
+<body>
+<p class="navbar"><a href="../index.html">Home</a> -&gt; Whitespace</p>
+
+<h2>Whitespace</h2>
+
+<p><a href=" http://compsoc.dur.ac.uk/whitespace/">Whitespace</a> is a
+strange language.  Its tokens are space, line-feed, and tab &mdash;
+everything else is comment.  It's stack based, has console i/o, and an
+associative store.  Yes, it's Turing complete.  Yes, you'd be insane
+to use it.  It belongs to the venerable tradition of languages like 
+<a href="http://www.muppetlabs.com/~breadbox/bf/">Brainf*ck</a>, 
+<a href="http://shakespearelang.sourceforge.net/">Shakespeare</a>,
+and 
+<a href="http://www.eleves.ens.fr:8080/home/madore/programs/unlambda/">
+Unlambda</a>.
+
+<p>Here's <a href="whitespace">my Whitespace interpreter</a>, written
+in Ruby.  It's nothing to be proud of, but hey, what do you expect at
+4 a.m.?
+
+<p>I stayed up for the better part of a night writing this.  Why?
+Crazy, I guess.
+
+<hr>
+
+<h2>Whitespace-asm</h2>
+
+<p>
+Here's my <a href="whitespace-asm">whitespace assembler</a>, 
+also written in Ruby.
+
+<p>
+This test program prints the alphabet: 
+<a href="alphabet.wsa">alphabet.wsa</a>
+
+<p>To assemble it, run whitespace-asm like this: 
+
+<blockquote><p><code>./whitespace-asm alphabet.wsa</code></blockquote>
+
+<p>That should generate <a href="alphabet.ws">alphabet.ws</a>.
+
+<p>Then run it:
+
+<blockquote><p><code>
+./whitespace alphabet.ws<br>
+ABCDEFGHIJKLMNOPQRSTUVWXYZ
+</code></blockquote>
+
+<h3>Syntax</h3>
+
+<h4>Comments</h4>
+
+<p>A "#" anywhere on a line starts a comment.  The rest of the line is
+ignored.  Blank lines are ignored.
+
+<h4>Labels</h4>
+
+<p>You can use this alternate syntax for a label if you wish:
+
+<blockquote><p><code><em>unsigned-number</em>:</code></blockquote>
+
+<h4>Opcodes</h4>
+
+<blockquote>
+<table border=1>
+  <tr><th colspan=2 align="right">Opcode</th><th>Operand</th><th>Description</th></tr>
+  <tr>
+    <th rowspan=4>Stack Manipulation</th>
+    <td>push</td>
+    <td>signed-number</td>
+    <td>Push a number onto the stack</td>
+  </tr>
+  <tr>
+    <td>dup</td>
+    <td></td>
+    <td>Push top of stack into the stack again</td>
+  </tr>
+  <tr>
+    <td>swap</td>
+    <td></td>
+    <td>Swap two topmost numbers on stack</td>
+  </tr>
+  <tr>
+    <td>discard</td>
+    <td></td>
+    <td>Pop &amp; discard number on top of stack</td>
+  </tr>
+  <tr>
+    <th rowspan=5>Arithmetic</th>
+    <td>add</td>
+    <td></td>
+    <td>Pop two numbers, add, push result</td>
+  </tr>
+  <tr>
+    <td>sub</td>
+    <td></td>
+    <td>Pop two numbers, subtract, push result</td>
+  </tr>
+  <tr>
+    <td>mul</td>
+    <td></td>
+    <td>Pop two numbers, multiply, push result</td>
+  </tr>
+  <tr>
+    <td>div</td>
+    <td></td>
+    <td>Pop two numbers, integer divide, push result</td>
+  </tr>
+  <tr>
+    <td>mod</td>
+    <td></td>
+    <td>Pop two numbers, modulo, push result</td>
+  </tr>
+  <tr>
+    <th rowspan=2>Heap Access</th>
+    <td>store</td>
+    <td></td>
+    <td>Pop value and address; store value on heap at that address</td>
+  </tr>
+  <tr>
+    <td>retrieve</td>
+    <td></td>
+    <td>Pop address; push onto stack the heap value at that address</td>
+  </tr>
+  <tr>
+    <th rowspan=7>Flow Control</th>
+    <td>label</td>
+    <td>unsigned-number</td>
+    <td>Target for other flow-control ops</td>
+  </tr>
+  <tr>
+    <td>call</td>
+    <td>unsigned-number</td>
+    <td>Call subroutine</td>
+  </tr>
+  <tr>
+    <td>jump</td>
+    <td>unsigned-number</td>
+    <td>Unconditional jump
+  </tr>
+  <tr>
+    <td>jz</td>
+    <td>unsigned-number</td>
+    <td>Pop top of stack; jump if it's zero</td>
+  </tr>
+  <tr>
+    <td>jn</td>
+    <td>unsigned-number</td>
+    <td>Pop top of stack; jump if it's negative</td>
+  </tr>
+  <tr>
+    <td>ret</td>
+    <td></td>
+    <td>Return from subroutine</td>
+  </tr>
+  <tr>
+    <td>exit</td>
+    <td></td>
+    <td>Exit interpreter</td>
+  </tr>
+  <tr>
+    <th rowspan=4>I/O</th>
+    <td>outchar</td>
+    <td></td>
+    <td>Pop top of stack; print it as ascii character</td>
+  </tr>
+  <tr>
+    <td>outnum</td>
+    <td></td>
+    <td>Pop top of stack; print it as decimal number</td>
+  </tr>
+  <tr>
+    <td>readchar</td>
+    <td></td>
+    <td>Read character from stdin &amp; push it onto stack</td>
+  </tr>
+  <tr>
+    <td>readnum</td>
+    <td></td>
+    <td>Read integer from stdin &amp; push it onto stack</td>
+  </tr>
+</table>
+</blockquote>
+
+<hr>
+<h2>Whitespace-disassem</h2>
+
+<p>Here's my <a href="whitespace-disassem">whitespace
+disassembler</a>.  It's nothing more than a cheap hack of my
+interpreter.  
+
+<p>Yes, there's too much duplicated code between these three programs.
+No, I'm not going to fix it tonight.  Maybe tomorrow.
+
+<p class=copyrightbar>Content of this site is &copy;
+<a href="mailto:wconrad@yagni.com">Wayne Conrad</a>. All rights reserved.
+
+</body>
+</html>

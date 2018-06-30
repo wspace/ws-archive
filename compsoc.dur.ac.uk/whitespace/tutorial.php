@@ -1,0 +1,248 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/1999/REC-html401-19991224/loose.dtd">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>Whitespace Tutorial</title>
+<LINK REL="STYLESHEET" TYPE="text/css" HREF="home.css">
+</head>
+<body>
+
+
+<table class="layout">
+<tr>
+<th colspan=2>
+<h1> Whitespace Tutorial</h1>
+</th>
+</tr>
+<tr>
+<td class="layout" width="10%">
+<p>
+
+<a href="index.php">Whitespace</a><br>
+Tutorial<br>
+<a href="examples.php">Examples</a><br>
+<a href="contrib.php">Contributions</a><br>
+<a href="download.php">Download</a><br>
+<a href="tools.php">Tools</a><br>
+<a href="feedback.php">Feedback</a><br>
+<a href="mailinglist.php">Mailing List</a><br>
+<a href="explanation.php">Explanation</a><br>
+
+</p>
+</td>
+<td width="90%" class=main>
+
+<h2>Whitespace tutorial</h2>
+
+<p>
+This is not intended to be a language reference, but rather an informal 
+introduction to the whitespace language. The closest thing to a formal
+specification is the implementation itself! Look in <code>VM.hs</code> in
+the distribution for the operational semantics.
+
+<p>
+The only lexical tokens in the whitespace language are <em>Space</em> 
+(ASCII 32), <em>Tab</em> (ASCII 9) and <em>Line Feed</em> (ASCII 10).
+By only allowing line feed as a token, CR/LF problems are avoided across
+DOS/Unix file conversions. (<em>Um, not sure. Maybe we'll sort this in a 
+later version.</em>).
+</p>
+
+<p>
+The language itself is an imperative, stack based language. Each command 
+consists of a series of tokens, beginning with the <em>Instruction
+Modification Parameter</em> (IMP). These are listed in the table below.
+</p>
+
+<table>
+<tr><th>IMP</th><th>Meaning</th></tr>
+<tr><td>[Space]</td><td>Stack Manipulation</td></tr>
+<tr><td>[Tab][Space]</td><td>Arithmetic</td></tr>
+<tr><td>[Tab][Tab]</td><td>Heap access</td></tr>
+<tr><td>[LF]</td><td>Flow Control</td></tr>
+<tr><td>[Tab][LF]</td><td>I/O</td></tr>
+</table>
+
+<p> 
+The virtual machine on which programs run has a stack and a
+heap. The programmer is free to push arbitrary width integers onto the
+stack (only integers, currently there is no implementation of floating
+point or real numbers). The heap can also be accessed by the user as a
+permanent store of variables and data structures.  
+</p>
+
+<p>
+Many commands require numbers or labels as parameters. Numbers can be any 
+number of bits wide, and are simply represented as a series of [Space] and 
+[Tab], terminated by a [LF]. [Space] represents the binary digit 0, [Tab]
+represents 1. The sign of a number is given by its first character, [Space]
+for positive and [Tab] for negative. Note that this is <em>not</em> twos 
+complement, it just indicates a sign.
+</p>
+<p>
+Labels are simply [LF] terminated lists of spaces and tabs. There is only 
+one global namespace so all labels must be unique.
+</p>
+
+<h3>Stack Manipulation (IMP: [Space]) </h3>
+
+<p>
+Stack manipulation is one of the more common operations, hence the shortness of the IMP [Space]. There are four stack instructions.
+</p>
+<table>
+<tr><th>Command</th><th>Parameters</th><th>Meaning</th></tr>
+<tr><td>[Space]</td><td>Number</td><td>Push the number onto the stack</td></tr>
+<tr><td>[LF][Space]</td><td>-</td><td>Duplicate the top item on the stack</td></tr>
+<tr><td>[Tab][Space]</td><td>Number</td><td>Copy the <em>n</em>th item on the stack (given by the argument) onto the top of the stack</td><tr>
+<tr><td>[LF][Tab]</td><td>-</td><td>Swap the top two items on the stack</td></tr>
+<tr><td>[LF][LF]</td><td>-</td><td>Discard the top item on the stack</td></tr>
+<tr><td>[Tab][LF]</td><td>Number</td><td>Slide <em>n</em> items off the stack, keeping the top item</td></tr>
+</table>
+
+<p>
+The copy and slide instructions are an extension implemented in Whitespace 0.3 
+and are designed to facilitate the implementation of recursive functions.
+The idea is that local variables are referred to using [Space][Tab][Space],
+then on return, you can push the return value onto the top of the stack and 
+use [Space][Tab][LF] to discard the local variables.
+
+<h3>Arithmetic (IMP: [Tab][Space]) </h3>
+<p>
+Arithmetic commands operate on the top two items on the stack, and replace 
+them with the result of the operation. The first item pushed is considered to 
+be <em>left</em> of the operator.
+</p>
+<table>
+<tr><th>Command</th><th>Parameters</th><th>Meaning</th></tr>
+<tr><td>[Space][Space]</td><td>-</td><td>Addition</td></tr>
+<tr><td>[Space][Tab]</td><td>-</td><td>Subtraction</td></tr>
+<tr><td>[Space][LF]</td><td>-</td><td>Multiplication</td></tr>
+<tr><td>[Tab][Space]</td><td>-</td><td>Integer Division</td></tr>
+<tr><td>[Tab][Tab]</td><td>-</td><td>Modulo</td></tr>
+</table>
+
+<h3>Heap Access (IMP: [Tab][Tab])</h3>
+<p>
+Heap access commands look at the stack to find the address of items to be 
+stored or retrieved. To store an item, push the address then the value
+and run the store command. To retrieve an item, push the address and
+run the retrieve command, which will place the value stored in the location
+at the top of the stack.
+</p>
+<table>
+<tr><th>Command</th><th>Parameters</th><th>Meaning</th></tr>
+<tr><td>[Space]</td><td>-</td><td>Store</td></tr>
+<tr><td>[Tab]</td><td>-</td><td>Retrieve</td></tr>
+</table>
+
+<h3>Flow Control (IMP: [LF])</h3>
+<p>
+Flow control operations are also common. Subroutines are marked by labels,
+as well as the targets of conditional and unconditional jumps, by which loops
+can be implemented. Programs must be ended by means of [LF][LF][LF] so that
+the interpreter can exit cleanly.
+</p>
+
+<table>
+<tr><th>Command</th><th>Parameters</th><th>Meaning</th></tr>
+<tr><td>[Space][Space]</td><td>Label</td><td>Mark a location in the program</td></tr>
+<tr><td>[Space][Tab]</td><td>Label</td><td>Call a subroutine</td></tr>
+<tr><td>[Space][LF]</td><td>Label</td><td>Jump unconditionally to a label</td></tr>
+<tr><td>[Tab][Space]</td><td>Label</td><td>Jump to a label if the top of the stack is zero</td></tr>
+<tr><td>[Tab][Tab]</td><td>Label</td><td>Jump to a label if the top of the stack is negative</td></tr>
+<tr><td>[Tab][LF]</td><td>-</td><td>End a subroutine and transfer control back to the caller</td></tr>
+<tr><td>[LF][LF]</td><td>-</td><td>End the program</td></tr>
+</table>
+
+<h3>I/O (IMP: [Tab][LF])</h3>
+
+<p>
+Finally, we need to be able to interact with the user. There are IO 
+instructions for reading and writing numbers and individual characters. With
+these, string manipulation routines can be written (see 
+<a href="examples.php">examples</a> to see how this may be done).
+</p>
+<p>
+The <em>read</em> instructions take the heap address in which to store the 
+result from the top of the stack.
+</p>
+
+<table>
+<tr><th>Command</th><th>Parameters</th><th>Meaning</th></tr>
+<tr><td>[Space][Space]</td><td>-</td><td>Output the character at the top of the stack</td></tr>
+<tr><td>[Space][Tab]</td><td>-</td><td>Output the number at the top of the stack</td></tr>
+<tr><td>[Tab][Space]</td><td>-</td><td>Read a character and place it in the location given by the top of the stack</td></tr>
+<tr><td>[Tab][Tab]</td><td>-</td><td>Read a number and place it in the location given by the top of the stack</td></tr>
+</table>
+
+<h3>Annotated Example</h3>
+<p>
+Here is an annotated example of a program which counts from 1 to 10, outputting
+the current value as it goes.
+</p>
+
+<table border>
+<tr>
+<td>[Space][Space][Space][Tab][LF]</td><td> Put a 1 on the stack</td></tr>
+<tr>
+<td>[LF][Space][Space][Space][Tab][Space][Space]
+[Space][Space][Tab][Tab][LF]
+</td><td>Set a Label at this point</td></tr>
+<tr>
+<td>[Space][LF][Space]</td><td>Duplicate the top stack item</td></tr>
+<tr>
+<td>[Tab][LF][Space][Tab]</td><td>Output the current value</td></tr>
+<tr>
+<td>[Space][Space][Space][Tab][Space][Tab][Space][LF]</td>
+<td>Put 10 (newline) on the stack...</td></tr>
+<tr>
+<td>[Tab][LF][Space][Space]</td><td>...and output the newline</td></tr>
+<tr>
+<td>[Space][Space][Space][Tab][LF]</td><td>Put a 1 on the stack</td></tr>
+<tr>
+<td>[Tab][Space][Space][Space]</td><td>Addition. This increments our current value.</td></tr>
+<tr>
+<td>[Space][LF][Space]</td><td>Duplicate that value so we can test it</td></tr>
+<tr>
+<td>[Space][Space][Space][Tab][Space][Tab][Tab][LF]</td>
+<td>Push 11 onto the stack</td></tr>
+<tr>
+<td>[Tab][Space][Space][Tab]</td><td>Subtraction. So if we've reached the end, we have a zero on the stack.</td></tr>
+<tr>
+<td>[LF][Tab][Space][Space][Tab][Space][Space]
+[Space][Tab][Space][Tab][LF]</td><td>If we have a zero, jump to the end
+</td></tr>
+<tr>
+<td>[LF][Space][LF][Space][Tab][Space]
+[Space][Space][Space][Tab][Tab][LF]</td>
+<td>Jump to the start</td></tr>
+<tr>
+<td>
+[LF][Space][Space][Space][Tab][Space]
+[Space][Space][Tab][Space][Tab][LF]
+</td><td>Set the end label</td></tr>
+<tr>
+<td>[Space][LF][LF]</td><td>Discard our accumulator, to be tidy</td></tr>
+<tr>
+<td>[LF][LF][LF]</td><td>Finish</td></tr>
+</table>
+
+<p>
+What could be simpler? The source code for this program is available 
+<a href="count.ws">here</a>. Have fun!
+</p>
+
+<!-- -*-HTML-*- -->
+<hr>
+<p>
+<a href="mailto:eb@dcs.st-and.ac.uk"><em>eb@dcs.st-and.ac.uk</em></a>
+Released April 1st, 2003<br>
+Last Updated May 4th, 2004
+</p>
+<p>
+Hosted by <a href="http://compsoc.dur.ac.uk/">Durham University Computing
+Society</a></p>
+</td> 
+</tr>
+</table>
+</body></html>
